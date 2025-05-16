@@ -5,12 +5,12 @@ import requests
 from PIL import Image
 from io import BytesIO
 import base64
+import traceback
 
+# Coloque sua chave da OpenAI corretamente aqui
 openai.api_key = "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"
 
 app = Flask(__name__)
-
-import traceback
 
 @app.route("/bot", methods=["POST"])
 def bot():
@@ -18,18 +18,23 @@ def bot():
         incoming_msg = request.values.get('Body', '')
         media_url = request.values.get('MediaUrl0', '')
 
-        print("Mensagem recebida:", incoming_msg)
-        print("URL da imagem:", media_url)
+        print(f"Mensagem recebida: {incoming_msg}")
+        print(f"Media URL: {media_url}")
 
         if media_url:
             response = requests.get(media_url)
-            print("Status da imagem:", response.status_code)
             if response.status_code != 200:
-                raise Exception("Erro ao baixar imagem")
+                print(f"Erro ao baixar imagem: {response.status_code}")
+                reply = MessagingResponse()
+                reply.message("Erro ao baixar a imagem.")
+                return str(reply)
 
             img_bytes = BytesIO(response.content)
             base64_image = base64.b64encode(img_bytes.read()).decode("utf-8")
 
+            print("Imagem convertida para base64.")
+
+            # Chamada ao ChatGPT com visão
             response = openai.ChatCompletion.create(
                 model="gpt-4-vision-preview",
                 messages=[
@@ -37,29 +42,36 @@ def bot():
                     {
                         "role": "user",
                         "content": [
-                            {"type": "text", "text": "Transforme essa imagem num desenho de livro de colorir"},
-                            {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}}
+                            {"type": "text", "text": "Pegue esta foto e faça virar um desenho para colorir igual de livros para colorir. As linhas são pretas e bem definidas com praços simples, desenho fofo tipo dos livros de crianças. Não pode ter sombras nem cores. Não pode ter elementos na imagem que não estavam na imagem original. Mantenha os principais elementos da foto, como posição, poses apenas simplifique os detalhes complexos. 724 Se houver pessoas em volta desenhe de forma amigável e arredondada. gere a imagem no estilo livro para colorir."},
+                            {
+                                "type": "image_url",
+                                "image_url": {
+                                    "url": f"data:image/jpeg;base64,{base64_image}"
+                                }
+                            }
                         ]
                     }
                 ],
                 max_tokens=1000
             )
 
-            print("Resposta da OpenAI:", response)
+            print("Resposta da OpenAI recebida.")
 
             reply = MessagingResponse()
-            reply.message("Imagem processada com sucesso!")
+            reply.message("Aqui está o seu desenho! (essa parte deve ser adaptada para enviar imagem)")
             return str(reply)
+
         else:
             reply = MessagingResponse()
-            reply.message("Envie uma imagem para processar.")
+            reply.message("Envie uma foto para que eu possa transformá-la em um desenho para colorir!")
             return str(reply)
 
     except Exception as e:
-        print("Erro interno:", str(e))
+        print("Erro no servidor:", e)
         traceback.print_exc()
-        return "Erro interno no servidor", 500
-
+        reply = MessagingResponse()
+        reply.message("Houve um erro interno no servidor. Tente novamente mais tarde.")
+        return str(reply)
 
 if __name__ == "__main__":
     app.run(debug=True)
