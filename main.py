@@ -4,7 +4,7 @@ import openai
 
 app = Flask(__name__)
 
-openai.api_key = "SUA_CHAVE_OPENAI"
+openai.api_key = "OPENAI_API_KEY"
 
 def gerar_prompt_chatgpt(prompt):
     response = openai.chat.completions.create(
