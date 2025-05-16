@@ -3,7 +3,7 @@ from twilio.twiml.messaging_response import MessagingResponse
 from openai import OpenAI  # Importa o novo cliente
 import requests
 
-openai_api_key = "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"
+openai_api_key = "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"
 
 app = Flask(__name__)
 
