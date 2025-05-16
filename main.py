@@ -1,3 +1,4 @@
+import os
 from flask import Flask, request, send_file
 from twilio.twiml.messaging_response import MessagingResponse
 import requests
@@ -5,9 +6,11 @@ import cv2
 import numpy as np
 from io import BytesIO
 from PIL import Image
-import os
 
 app = Flask(__name__)
+
+# URL pública (ex: do ngrok) - configure no ambiente
+BASE_URL = os.environ.get("BASE_URL", "https://7158-189-113-131-170.ngrok-free.app")
 
 def photo_to_sketch(image_url):
     # Baixa a imagem
@@ -53,15 +56,9 @@ def bot():
             with open(temp_filename, 'wb') as f:
                 f.write(sketch_img.read())
 
-            # Reseta o ponteiro para leitura no próximo uso (se quiser usar BytesIO diretamente)
-            sketch_img.seek(0)
-
             # Envia a imagem de volta via Twilio (WhatsApp)
             message = resp.message("Aqui está seu desenho para colorir!")
-            message.media(f"https://YOUR_DOMAIN/{temp_filename}")
-
-            # Opcional: apagar arquivo depois (se for server com espaço limitado)
-            # os.remove(temp_filename)
+            message.media(f"{BASE_URL}/{temp_filename}")
 
         except Exception as e:
             resp.message(f"Desculpe, ocorreu um erro ao processar a imagem: {str(e)}")
