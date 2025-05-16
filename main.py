@@ -1,13 +1,11 @@
 from flask import Flask, request
 from twilio.twiml.messaging_response import MessagingResponse
-from openai import OpenAI  # Importa o novo cliente
-import requests
-
-openai_api_key = "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"
+from openai import OpenAI
+import os
 
 app = Flask(__name__)
 
-client = OpenAI(api_key=openai_api_key)  # Cria cliente OpenAI
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 @app.route("/bot", methods=["POST"])
 def bot():
@@ -27,7 +25,7 @@ def bot():
                     "role": "user",
                     "content": [
                         {"type": "text", "text": (
-                            "Pegue esta foto e faça virar um desenho para colorir igual de livros para colorir. As linhas são pretas e bem definidas com traços simples, desenho fofo tipo dos livros de crianças. Não pode ter sombras nem cores. Não pode ter elementos na imagem que não estavam na imagem original. Mantenha os principais elementos da foto, como posição, poses, apenas simplifique os detalhes complexos. Se houver pessoas em volta desenhe de forma amigável e arredondada. Gere a imagem no estilo livro para colorir."
+                            "Pegue esta foto e faça virar um desenho para colorir igual de livros para colorir. As linhas são pretas e bem definidas com traços simples, desenho fofo tipo dos livros de crianças. Não pode ter sombras nem cores. Não pode ter elementos na imagem que não estavam na imagem original. Mantenha os principais elementos da foto, como posição, poses, apenas simplifique os detalhes complexos. Gere a imagem no estilo livro para colorir."
                         )},
                         {
                             "type": "image_url",
@@ -40,18 +38,16 @@ def bot():
             ]
 
             completion = client.chat.completions.create(
-                model="gpt-4o-mini",  # ou "gpt-4-vision-preview" se tiver acesso
+                model="gpt-4o-mini",
                 messages=messages,
                 max_tokens=1000
             )
 
             resposta_texto = completion.choices[0].message.content.strip()
-
             resp.message(f"Aqui está o seu desenho (descrição): {resposta_texto}")
 
         except Exception as e:
             resp.message(f"Desculpe, ocorreu um erro ao processar a imagem: {str(e)}")
-
     else:
         resp.message("Envie uma foto para que eu possa transformá-la em um desenho para colorir!")
 
