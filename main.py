@@ -27,11 +27,7 @@ def bot():
                     "role": "user",
                     "content": [
                         {"type": "text", "text": (
-                            "Pegue esta foto e faça virar um desenho para colorir igual de livros para colorir. "
-                            "As linhas são pretas e bem definidas com traços simples, desenho fofo tipo dos livros de crianças. "
-                            "Não pode ter sombras nem cores. Não pode ter elementos na imagem que não estavam na imagem original. "
-                            "Mantenha os principais elementos da foto, como posição, poses, apenas simplifique os detalhes complexos. "
-                            "Se houver pessoas em volta desenhe de forma amigável e arredondada. Gere a imagem no estilo livro para colorir."
+                            "Pegue esta foto e faça virar um desenho para colorir igual de livros para colorir. As linhas são pretas e bem definidas com traços simples, desenho fofo tipo dos livros de crianças. Não pode ter sombras nem cores. Não pode ter elementos na imagem que não estavam na imagem original. Mantenha os principais elementos da foto, como posição, poses, apenas simplifique os detalhes complexos. Se houver pessoas em volta desenhe de forma amigável e arredondada. Gere a imagem no estilo livro para colorir."
                         )},
                         {
                             "type": "image_url",
