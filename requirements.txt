@@ -3,5 +3,6 @@ requests==2.31.0
 openai>=1.2.0
 gunicorn
 twilio
-pillow
 requests
+opencv-python-headless
+pillow
