@@ -1,6 +1,6 @@
 flask
 gunicorn
-openai
+openai>=1.2.0
 twilio
 pillow
 requests
