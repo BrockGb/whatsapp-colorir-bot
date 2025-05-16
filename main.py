@@ -1,12 +1,13 @@
 from flask import Flask, request
 from twilio.twiml.messaging_response import MessagingResponse
-import openai
+from openai import OpenAI  # Importa o novo cliente
 import requests
-from io import BytesIO
 
-openai.api_key = "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"
+openai_api_key = "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"
 
 app = Flask(__name__)
+
+client = OpenAI(api_key=openai_api_key)  # Cria cliente OpenAI
 
 @app.route("/bot", methods=["POST"])
 def bot():
@@ -17,9 +18,6 @@ def bot():
 
     if media_url:
         try:
-            # Note: OpenAI GPT-4 Vision não aceita base64 embutido, precisa da URL pública da imagem.
-            # Então enviamos a URL direta da imagem para o modelo.
-
             messages = [
                 {
                     "role": "system",
@@ -45,14 +43,12 @@ def bot():
                 }
             ]
 
-            completion = openai.ChatCompletion.create(
-                model="gpt-4o-mini",  # Ou "gpt-4-vision-preview" se disponível no seu acesso
+            completion = client.chat.completions.create(
+                model="gpt-4o-mini",  # ou "gpt-4-vision-preview" se tiver acesso
                 messages=messages,
                 max_tokens=1000
             )
 
-            # A resposta da API com visão pode incluir texto ou até links para imagens geradas.
-            # Aqui vamos assumir que o texto da resposta está no primeiro choice.
             resposta_texto = completion.choices[0].message.content.strip()
 
             resp.message(f"Aqui está o seu desenho (descrição): {resposta_texto}")
@@ -64,7 +60,6 @@ def bot():
         resp.message("Envie uma foto para que eu possa transformá-la em um desenho para colorir!")
 
     return str(resp)
-
 
 if __name__ == "__main__":
     app.run(debug=True)
