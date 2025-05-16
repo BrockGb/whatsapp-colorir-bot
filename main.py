@@ -2,9 +2,7 @@ from flask import Flask, request
 from twilio.twiml.messaging_response import MessagingResponse
 import openai
 import requests
-from PIL import Image
 from io import BytesIO
-import base64
 
 openai.api_key = "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"
 
@@ -15,42 +13,58 @@ def bot():
     incoming_msg = request.values.get('Body', '')
     media_url = request.values.get('MediaUrl0', '')
 
-    if media_url:
-        # Baixa a imagem
-        response = requests.get(media_url)
-        img_bytes = BytesIO(response.content)
-        base64_image = base64.b64encode(img_bytes.read()).decode("utf-8")
+    resp = MessagingResponse()
 
-        # Chamada ao ChatGPT com visão
-        response = openai.ChatCompletion.create(
-            model="gpt-4-vision-preview",
-            messages=[
-                {"role": "system", "content": "Você é um artista que transforma fotos em desenhos para colorir."},
+    if media_url:
+        try:
+            # Note: OpenAI GPT-4 Vision não aceita base64 embutido, precisa da URL pública da imagem.
+            # Então enviamos a URL direta da imagem para o modelo.
+
+            messages = [
+                {
+                    "role": "system",
+                    "content": "Você é um artista que transforma fotos em desenhos para colorir."
+                },
                 {
                     "role": "user",
                     "content": [
-                        {"type": "text", "text": "Pegue esta foto e faça virar um desenho para colorir igual de livros para colorir. As linhas são pretas e bem definidas com praços simples, desenho fofo tipo dos livros de crianças. Não pode ter sombras nem cores. Não pode ter elementos na imagem que não estavam na imagem original. Mantenha os principais elementos da foto, como posição, poses apenas simplifique os detalhes complexos. 724 Se houver pessoas em volta desenhe de forma amigável e arredondada. gere a imagem no estilo livro para colorir."}, 
+                        {"type": "text", "text": (
+                            "Pegue esta foto e faça virar um desenho para colorir igual de livros para colorir. "
+                            "As linhas são pretas e bem definidas com traços simples, desenho fofo tipo dos livros de crianças. "
+                            "Não pode ter sombras nem cores. Não pode ter elementos na imagem que não estavam na imagem original. "
+                            "Mantenha os principais elementos da foto, como posição, poses, apenas simplifique os detalhes complexos. "
+                            "Se houver pessoas em volta desenhe de forma amigável e arredondada. Gere a imagem no estilo livro para colorir."
+                        )},
                         {
                             "type": "image_url",
                             "image_url": {
-                                "url": f"data:image/jpeg;base64,{base64_image}"
+                                "url": media_url
                             }
                         }
                     ]
                 }
-            ],
-            max_tokens=1000
-        )
+            ]
 
-        # Pega a resposta do GPT
-        reply = MessagingResponse()
-        reply.message("Aqui está o seu desenho! (essa parte deve ser adaptada para enviar imagem)")
-        return str(reply)
+            completion = openai.ChatCompletion.create(
+                model="gpt-4o-mini",  # Ou "gpt-4-vision-preview" se disponível no seu acesso
+                messages=messages,
+                max_tokens=1000
+            )
+
+            # A resposta da API com visão pode incluir texto ou até links para imagens geradas.
+            # Aqui vamos assumir que o texto da resposta está no primeiro choice.
+            resposta_texto = completion.choices[0].message.content.strip()
+
+            resp.message(f"Aqui está o seu desenho (descrição): {resposta_texto}")
+
+        except Exception as e:
+            resp.message(f"Desculpe, ocorreu um erro ao processar a imagem: {str(e)}")
 
     else:
-        reply = MessagingResponse()
-        reply.message("Envie uma foto para que eu possa transformá-la em um desenho para colorir!")
-        return str(reply)
+        resp.message("Envie uma foto para que eu possa transformá-la em um desenho para colorir!")
+
+    return str(resp)
+
 
 if __name__ == "__main__":
     app.run(debug=True)
